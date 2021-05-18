@@ -9,5 +9,5 @@ pip install -r requirements.txt
 
 ## Usage
 ```
-python app.py [code[, code[, ...]]]
+python app.py [options] code1 code2
 ```

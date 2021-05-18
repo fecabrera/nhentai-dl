@@ -1,4 +1,7 @@
-.vscode
+.vscode/
+.build/
+.dist/
+*.spec
 
 **/__pycache__
 **/.DS_Store

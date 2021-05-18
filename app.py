@@ -1,13 +1,22 @@
 import os
-import sys
 import shutil
 from pathlib import Path
+from optparse import OptionParser
 
 from nhentai_dl import Manga
 
-for c in sys.argv[1:]:
+p = OptionParser(usage='usage: %prog [options] code1 code2')
+p.add_option('-a', '--archive', action="store_true", dest='archive', help='archive images to a zip file')
+p.add_option('-c', '--cover', action="store_true", dest='cover', help='downloads the cover artwork')
+
+(options, args) = p.parse_args()
+
+print(options)
+
+for c in args:
   print(f'Fetching {c}...')
-  m = Manga(c)
+
+  m           = Manga(c)
   
   title       = m.title
   page_count  = m.page_count
@@ -22,9 +31,10 @@ for c in sys.argv[1:]:
 
     path = os.path.join(dir_name, f'{page.n}.jpg')
     open(path, 'wb').write(page.download().content)
-    
-  print('Archiving...')
+  
+  if options['archive']:
+    print('Archiving...')
 
-  shutil.make_archive(m.code, 'zip', dir_name)
+    shutil.make_archive(m.code, 'zip', dir_name)
 
   print('')
