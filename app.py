@@ -11,8 +11,6 @@ p.add_option('-c', '--cover', action="store_true", dest='cover', help='downloads
 
 (options, args) = p.parse_args()
 
-print(options)
-
 for c in args:
   print(f'Fetching {c}...')
 
@@ -32,7 +30,7 @@ for c in args:
     path = os.path.join(dir_name, f'{page.n}.jpg')
     open(path, 'wb').write(page.download().content)
   
-  if options['archive']:
+  if options.archive:
     print('Archiving...')
 
     shutil.make_archive(m.code, 'zip', dir_name)
