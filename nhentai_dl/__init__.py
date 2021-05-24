@@ -1,5 +1,6 @@
 import requests
 from pyquery import PyQuery
+from urllib.parse import urljoin
 
 HOSTNAME = 'https://nhentai.net'
 
@@ -9,7 +10,6 @@ class Manga:
   code:         str
   title:        str
   page_count:   int
-  img_prefix:   str
 
   def __init__(self, code: str):
     self.code       = code
@@ -17,51 +17,58 @@ class Manga:
     req             = requests.get(self.url)
 
     self._pq        = PyQuery(req.content)
-    self.title      = self.get_title()
-    self.page_count = self.get_page_count()
-    self.img_prefix = self.get_img_prefix()
+    self.title      = self._get_title()
+    self.page_count = self._get_page_count()
 
   @property
   def url(self) -> str:
     return f'{HOSTNAME}/g/{self.code}'
   
-  @property
-  def cover_url(self) -> str:
-    return f'{self.img_prefix}/cover.jpg'
-  
-  def get_title(self) -> str:
+  def _get_title(self) -> str:
     d = self._pq('h1.title').find('span.pretty')
     return d.text()
   
-  def get_page_count(self) -> int:
+  def _get_page_count(self) -> int:
     d = self._pq('div.tag-container.field-name').eq(-2).find('span.name')
     return int(d.text())
   
-  def get_img_prefix(self):
-    d = self._pq('div#cover').find('img').attr('data-src')
-    return d.replace('/cover.jpg', '')
-  
   def download_cover(self):
-    return requests.get(self.cover_url)
+    pass
   
-  def page(self, n: int):
-    return Page(self, n)
+  @property
+  def cursor(self):
+    return Cursor(self)
 
-  def pages(self):
-    return [self.page(i + 1) for i in range(self.page_count)]
-
-class Page:
+class Cursor:
   manga:  Manga
   n:      int
-  _pq:    PyQuery
+  
+  _prefix: str
 
-  def __init__(self, manga: Manga, n: int):
-    self.manga  = manga
-    self.n      = n
+  def __init__(self, manga: Manga, n: int = 1):
+    self.manga    = manga
+    self.n        = n
+    self._prefix  = self._get_prefix()
+
+  def next(self):
+    self.n += 1
+    return self
+  
+  @property
+  def is_valid(self):
+    return self.n <= self.manga.page_count
+  
+  def _get_prefix(self):
+    p_url = f'{self.manga.url}/{self.n}'
+    req   = requests.get(p_url)
+    pq    = PyQuery(req.content)
+    i_url = pq('#image-container').find('img').attr('src')
+
+    return i_url
   
   @property
   def url(self) -> str:
-    return f'{self.manga.img_prefix}/{self.n}.jpg'
+    return urljoin(self._prefix, f'{self.n}.jpg')
   
   def download(self):
     return requests.get(self.url)

@@ -24,11 +24,15 @@ for c in args:
 
   Path(dir_name).mkdir(exist_ok=True)
 
-  for page in m.pages():
-    print(f'Downlading page {page.n}/{page_count}')
+  cursor = m.cursor
 
-    path = os.path.join(dir_name, f'{page.n}.jpg')
-    open(path, 'wb').write(page.download().content)
+  while cursor.is_valid:
+    print(f'Downlading page {cursor.n}/{page_count}')
+
+    path = os.path.join(dir_name, f'{cursor.n}.jpg')
+    open(path, 'wb').write(cursor.download().content)
+
+    cursor.next()
   
   if options.archive:
     print('Archiving...')
